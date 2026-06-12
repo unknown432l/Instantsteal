@@ -29,23 +29,21 @@ ScreenGui.Name = "EscapeBrainrotAutomatico"
 ScreenGui.Parent = LocalPlayer:WaitForChild("PlayerGui")
 ScreenGui.ResetOnSpawn = false
 
--- Contenedor invisible para mover ambos botones juntos
 MainFrame.Parent = ScreenGui
 MainFrame.Size = UDim2.new(0, 200, 0, 115)
 MainFrame.Position = UDim2.new(0.5, -100, 0.15, 0)
 MainFrame.BackgroundTransparency = 1
 MainFrame.Active = true
-MainFrame.Draggable = true -- Puedes arrastrar todo el menú junto
+MainFrame.Draggable = true
 
 UIListLayout.Parent = MainFrame
 UIListLayout.SortOrder = Enum.SortOrder.LayoutOrder
 UIListLayout.Padding = UDim.new(0, 10)
 
--- BOTÓN 1: Guardar la posición actual
 SetPosButton.Name = "SetPosButton"
 SetPosButton.Parent = MainFrame
 SetPosButton.Size = UDim2.new(1, 0, 0, 50)
-SetPosButton.BackgroundColor3 = Color3.fromRGB(0, 120, 255) -- Azul
+SetPosButton.BackgroundColor3 = Color3.fromRGB(0, 120, 255)
 SetPosButton.TextColor3 = Color3.fromRGB(255, 255, 255)
 SetPosButton.TextSize = 16
 SetPosButton.Font = Enum.Font.GothamBold
@@ -55,11 +53,10 @@ SetPosButton.LayoutOrder = 1
 UICorner1.CornerRadius = UDim.new(0, 12)
 UICorner1.Parent = SetPosButton
 
--- BOTÓN 2: Teletransporte de escape
 EscaparButton.Name = "EscapeButton"
 EscaparButton.Parent = MainFrame
 EscaparButton.Size = UDim2.new(1, 0, 0, 50)
-EscaparButton.BackgroundColor3 = Color3.fromRGB(255, 0, 100) -- Rosado
+EscaparButton.BackgroundColor3 = Color3.fromRGB(255, 0, 100)
 EscaparButton.TextColor3 = Color3.fromRGB(255, 255, 255)
 EscaparButton.TextSize = 16
 EscaparButton.Font = Enum.Font.GothamBold
@@ -71,22 +68,19 @@ UICorner2.Parent = EscaparButton
 
 -- [[ ACCIONES ]]
 
--- Lógica para guardar la base al inicio
 SetPosButton.MouseButton1Click:Connect(function()
     local character = LocalPlayer.Character
     local rootPart = character and character:FindFirstChild("HumanoidRootPart")
     if rootPart then
-        -- Guarda la posición actual y le suma un poquito de altura de seguridad
-        PosicionGuardada = rootPart.CFrame + Vector3.new(0, 3, 0)
+        PosicionGuardada = rootPart.CFrame + Vector3.new(0, 4, 0) -- Te suelta un poquito más arriba
         SetPosButton.Text = "✅ ¡BASE GUARDADA!"
-        SetPosButton.BackgroundColor3 = Color3.fromRGB(0, 180, 90) -- Verde
+        SetPosButton.BackgroundColor3 = Color3.fromRGB(0, 180, 90)
         task.wait(2)
         SetPosButton.Text = "📌 ACTUALIZAR BASE"
         SetPosButton.BackgroundColor3 = Color3.fromRGB(0, 120, 255)
     end
 end)
 
--- Lógica para teletransportarse
 EscaparButton.MouseButton1Click:Connect(function()
     if not PosicionGuardada then
         EscaparButton.Text = "❌ CONFIGURA TU BASE PRIMERO"
@@ -100,10 +94,19 @@ EscaparButton.MouseButton1Click:Connect(function()
     if rootPart then
         EscaparButton.Text = "¡TELEPORT!"
         
+        -- MEJORA CLAVE: Elimina cualquier objeto físico (fuerzas/cables) que te aten al objeto robado
+        for _, obj in pairs(character:GetDescendants()) do
+            if obj:IsA("BodyMover") or obj:IsA("Constraint") or obj:IsA("ForceField") then
+                obj:Destroy()
+            end
+        end
+        
+        -- Freno total de velocidades
         rootPart.Velocity = Vector3.new(0, 0, 0)
         rootPart.AssemblyLinearVelocity = Vector3.new(0, 0, 0)
+        rootPart.AssemblyAngularVelocity = Vector3.new(0, 0, 0)
         
-        -- Te lleva a la ubicación exacta que guardaste con el botón azul
+        -- Teletransporte directo
         rootPart.CFrame = PosicionGuardada
         
         task.wait(1)
