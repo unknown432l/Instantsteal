@@ -1,140 +1,181 @@
 local Players = game:GetService("Players")
 local LocalPlayer = Players.LocalPlayer
 
--- [[ BYPASS ANTI-KICK DELTA ULTRA ]]
+-- [[ BYPASS ANTI-KICK DELTA REAL ]]
 local gmt = getrawmetatable(game)
 setreadonly(gmt, false)
 local oldIndex = gmt.__index
 gmt.__index = newcclosure(function(self, key)
     if tostring(self) == "LocalPlayer" and key == "Kick" then
-        return function() warn("Delta Anti-Kick: Intento bloqueado.") end
+        return function() warn("Delta Anti-Kick: Bloqueado.") end
     end
     return oldIndex(self, key)
 end)
 setreadonly(gmt, true)
 
+-- Variable global para almacenar tus coordenadas exactas
+local PosicionGuardada = nil
+
 -- [[ INTERFAZ GRÁFICA NEGRO MATE CON AZUL NEÓN SÚPER DE TIKTOK ]]
 local ScreenGui = Instance.new("ScreenGui")
-local MainButton = Instance.new("TextButton")
-local UICorner = Instance.new("UICorner")
-local UIGradient = Instance.new("UIGradient")
-local UIBorder = Instance.new("UIStroke")
+local MainFrame = Instance.new("Frame")
+local UIListLayout = Instance.new("UIListLayout")
+local SetPosButton = Instance.new("TextButton")
+local EscaparButton = Instance.new("TextButton")
+local UICorner1 = Instance.new("UICorner")
+local UICorner2 = Instance.new("UICorner")
+local UIGradient1 = Instance.new("UIGradient")
+local UIGradient2 = Instance.new("UIGradient")
+local UIBorder1 = Instance.new("UIStroke")
+local UIBorder2 = Instance.new("UIStroke")
 
-ScreenGui.Name = "SupermeowInstantSteal"
+ScreenGui.Name = "NeonManualBrainrotEscape"
 ScreenGui.Parent = LocalPlayer:WaitForChild("PlayerGui")
 ScreenGui.ResetOnSpawn = false
 
-MainButton.Name = "EscapeButton"
-MainButton.Parent = ScreenGui
-MainButton.Size = UDim2.new(0, 200, 0, 55)
-MainButton.Position = UDim2.new(0.5, -100, 0.12, 0) -- Centrado arriba, idéntico al video
-MainButton.BackgroundColor3 = Color3.fromRGB(12, 12, 15) -- Negro mate traslúcido
-MainButton.TextColor3 = Color3.fromRGB(255, 255, 255)
-MainButton.TextSize = 14
-MainButton.Font = Enum.Font.GothamBold
-MainButton.Text = "⚡ ESCAPAR A BASE"
-MainButton.Active = true
-MainButton.Draggable = true
+MainFrame.Parent = ScreenGui
+MainFrame.Size = UDim2.new(0, 210, 0, 120)
+MainFrame.Position = UDim2.new(0.5, -105, 0.15, 0)
+MainFrame.BackgroundTransparency = 1
+MainFrame.Active = true
+MainFrame.Draggable = true
 
-UICorner.CornerRadius = UDim.new(0, 10)
-UICorner.Parent = MainButton
+UIListLayout.Parent = MainFrame
+UIListLayout.SortOrder = Enum.SortOrder.LayoutOrder
+UIListLayout.Padding = UDim.new(0, 10)
 
-UIGradient.Color = ColorSequence.new{
-    ColorSequenceKeypoint.new(0, Color3.fromRGB(0, 95, 230)),  -- Azul Neón Eléctrico del video
-    ColorSequenceKeypoint.new(1, Color3.fromRGB(8, 8, 12))     -- Negro profundo
+-- BOTÓN 1: Guardar la posición de tu personaje (Diseño Negro y Azul Neón)
+SetPosButton.Name = "SetPosButton"
+SetPosButton.Parent = MainFrame
+SetPosButton.Size = UDim2.new(1, 0, 0, 50)
+SetPosButton.BackgroundColor3 = Color3.fromRGB(12, 12, 15)
+SetPosButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+SetPosButton.TextSize = 14
+SetPosButton.Font = Enum.Font.GothamBold
+SetPosButton.Text = "📌 GUARDAR COORDENADA"
+SetPosButton.LayoutOrder = 1
+
+UICorner1.CornerRadius = UDim.new(0, 10)
+UICorner1.Parent = SetPosButton
+
+UIGradient1.Color = ColorSequence.new{
+    ColorSequenceKeypoint.new(0, Color3.fromRGB(0, 40, 80)),
+    ColorSequenceKeypoint.new(1, Color3.fromRGB(10, 10, 12))
 }
-UIGradient.Parent = MainButton
+UIGradient1.Parent = SetPosButton
 
-UIBorder.Color = Color3.fromRGB(0, 215, 255) -- Borde cian/azul neón brillante
-UIBorder.Thickness = 2.5
-UIBorder.Parent = MainButton
+UIBorder1.Color = Color3.fromRGB(0, 160, 255) -- Borde Azul Neón Eléctrico
+UIBorder1.Thickness = 2.5
+UIBorder1.Parent = SetPosButton
 
--- [[ RASTREADOR AUTOMÁTICO DE TU ALFOMBRA ROJA ]]
-local function ObtenerCFrameDeMiAlfombra()
-    local tycoons = workspace:FindFirstChild("Tycoons") or workspace:FindFirstChild("Bases") or workspace:FindFirstChild("Plots") or workspace
-    for _, tycoon in pairs(tycoons:GetChildren()) do
-        local owner = tycoon:FindFirstChild("Owner") or tycoon:FindFirstChild("Player") or tycoon:FindFirstChild("OwnerValue")
-        if owner and (owner.Value == LocalPlayer or owner.Value == LocalPlayer.Name or tycoon.Name == LocalPlayer.Name .. "'s Tycoon") then
-            local dropPad = tycoon:FindFirstChild("DropZone") or tycoon:FindFirstChild("Deposit") or tycoon:FindFirstChild("Collector") or tycoon:FindFirstChild("Deliver") or tycoon:FindFirstChild("MainPart")
-            if dropPad then
-                return dropPad.CFrame
-            end
-            local spawnPad = tycoon:FindFirstChild("Spawn") or tycoon:FindFirstChild("SpawnPart")
-            if spawnPad then
-                return spawnPad.CFrame
-            end
-        end
+-- BOTÓN 2: Teletransporte a la coordenada guardada
+EscaparButton.Name = "EscapeButton"
+EscaparButton.Parent = MainFrame
+EscaparButton.Size = UDim2.new(1, 0, 0, 50)
+EscaparButton.BackgroundColor3 = Color3.fromRGB(12, 12, 15)
+EscaparButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+EscaparButton.TextSize = 14
+EscaparButton.Font = Enum.Font.GothamBold
+EscaparButton.Text = "⚡ ESCAPAR A COORDENADA"
+EscaparButton.LayoutOrder = 2
+
+UICorner2.CornerRadius = UDim.new(0, 10)
+UICorner2.Parent = EscaparButton
+
+UIGradient2.Color = ColorSequence.new{
+    ColorSequenceKeypoint.new(0, Color3.fromRGB(0, 95, 230)), -- Azul Neón Intenso
+    ColorSequenceKeypoint.new(1, Color3.fromRGB(8, 8, 12))
+}
+UIGradient2.Parent = EscaparButton
+
+UIBorder2.Color = Color3.fromRGB(0, 215, 255) -- Borde Cian Ultrabrillante
+UIBorder2.Thickness = 2.5
+UIBorder2.Parent = EscaparButton
+
+-- [[ LÓGICA DE DETECCIÓN Y GUARDADO DE COORDENADAS ]]
+SetPosButton.MouseButton1Click:Connect(function()
+    local character = LocalPlayer.Character
+    local rootPart = character and character:FindFirstChild("HumanoidRootPart")
+    if rootPart then
+        PosicionGuardada = rootPart.CFrame
+        SetPosButton.Text = "✅ COORDENADA GUARDADA"
+        UIBorder1.Color = Color3.fromRGB(0, 255, 120) -- Verde temporal de éxito
+        task.wait(1.5)
+        SetPosButton.Text = "📌 ACTUALIZAR COORDENADA"
+        UIBorder1.Color = Color3.fromRGB(0, 160, 255)
     end
-    return CFrame.new(0, 5, 0)
-end
+end)
 
--- [[ LÓGICA ULTRA RÁPIDA: DESINCRONIZACIÓN DE RED + AUTO-DROP ]]
-MainButton.MouseButton1Click:Connect(function()
+-- [[ LÓGICA ULTRA RÁPIDA: DESINCRONIZACIÓN DE RED + TELEPORT ]]
+EscaparButton.MouseButton1Click:Connect(function()
+    if not PosicionGuardada then
+        EscaparButton.Text = "❌ MARCA TU COORDENADA PRIMERO"
+        task.wait(1.5)
+        EscaparButton.Text = "⚡ ESCAPAR A COORDENADA"
+        return
+    end
+
     local character = LocalPlayer.Character
     local rootPart = character and character:FindFirstChild("HumanoidRootPart")
     local humanoid = character and character:FindFirstChildOfClass("Humanoid")
     local backpack = LocalPlayer:FindFirstChild("Backpack")
     
     if rootPart and humanoid and backpack and humanoid.Health > 0 then
-        MainButton.Text = "⚡ ENTREGANDO..."
-        MainButton.TextColor3 = Color3.fromRGB(0, 255, 160)
+        EscaparButton.Text = "⚡ ENTREGANDO..."
+        EscaparButton.TextColor3 = Color3.fromRGB(0, 255, 160)
         
-        -- 1. Buscamos el CFrame de tu alfombra automáticamente
-        local destinoBase = ObtenerCFrameDeMiAlfombra()
+        -- Identificamos el Brainrot en tu mano
+        local brainrot = character:FindFirstChildOfClass("Tool") or character:FindFirstChild("Brainrot")
         
-        -- 2. Identificamos el Brainrot en tu mano
-        local brainrot = character:FindFirstChildOfClass("Tool")
-        
-        -- 3. MUDANZA ULTRA RÁPIDA DE PACKETS: Esconde el objeto antes del TP para romper el elástico
-        if brainrot then
+        -- MUDANZA ULTRA RÁPIDA DE PACKETS: Camufla el objeto en la mochila antes del TP
+        if brainrot and brainrot:IsA("Tool") then
             brainrot.Parent = backpack
         end
         
-        -- 4. METODO MENCIONADO: Rompe las ataduras físicas y constraints del servidor en paralelo
+        -- DESINCRONIZACIÓN DE RED: Borra sogas y se adueña de la física local
         pcall(function()
             for _, obj in pairs(character:GetDescendants()) do
                 if obj:IsA("RopeConstraint") or obj:IsA("SpringConstraint") or obj:IsA("Constraint") or obj:IsA("BodyMover") then
                     obj:Destroy()
                 end
             end
-            -- Fuerza la propiedad de simulación de red local para adueñarnos del objeto temporalmente
             settings().Physics.AllowSleep = false
             if brainrot then
                 brainrot:SetAttribute("NetworkOwner", LocalPlayer)
             end
         end)
         
-        -- 5. ANULACIÓN DE VECTORES DE VELOCIDAD (Velocity Nulling)
+        -- ANULACIÓN DE VECTORES (Velocity Nulling) + TELEPORT MANUAL
         rootPart.Velocity = Vector3.new(0, 0, 0)
         rootPart.AssemblyLinearVelocity = Vector3.new(0, 0, 0)
         rootPart.AssemblyAngularVelocity = Vector3.new(0, 0, 0)
-        rootPart.CFrame = destinoBase
+        rootPart.CFrame = PosicionGuardada
         task.wait(0.02)
         
-        -- 6. EXTRACCIÓN Y DEPOSITO FÍSICO EN TU BASE
+        -- EXTRACCIÓN Y DEPOSITO FÍSICO EN LA COORDENADA GUARDADA
         local botin = backpack:FindFirstChildOfClass("Tool") or character:FindFirstChildOfClass("Tool")
         if botin then
             botin.Parent = character
             task.wait(0.01)
-            botin.Parent = workspace -- Lo suelta físicamente para forzar el impacto con tu alfombra
+            botin.Parent = workspace -- Lo suelta en tu alfombra para forzar el impacto legal
             if botin:FindFirstChild("Handle") then
-                botin.Handle.CFrame = destinoBase
+                botin.Handle.CFrame = PosicionGuardada
             end
         end
         
-        -- 7. RE-ANCHORING & REDUNDANCIA DE RED: Clava la posición por milisegundos para registrar el 'You Stole'
+        -- HARD LOCK DE REDUNDANCIA: Te mantiene amarrado en tus coordenadas para anular fuerzas de regreso
         rootPart.Anchored = true
         for i = 1, 15 do
-            rootPart.CFrame = destinoBase
+            rootPart.CFrame = PosicionGuardada
             if botin and botin:FindFirstChild("Handle") then
-                botin.Handle.CFrame = destinoBase
+                botin.Handle.CFrame = PosicionGuardada
             end
             humanoid:ChangeState(Enum.HumanoidStateType.Freefall) -- Evita el cálculo de la soga del servidor
             task.wait(0.03)
         end
         rootPart.Anchored = false
         
-        MainButton.Text = "⚡ ESCAPAR A BASE"
-        MainButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+        EscaparButton.Text = "⚡ ESCAPAR A COORDENADA"
+        EscaparButton.TextColor3 = Color3.fromRGB(255, 255, 255)
     end
 end)
