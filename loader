@@ -1,6 +1,7 @@
 local Players = game:GetService("Players")
 local LocalPlayer = Players.LocalPlayer
 
+-- [[ BYPASS ANTI-KICK DELTA ]]
 local gmt = getrawmetatable(game)
 setreadonly(gmt, false)
 local oldIndex = gmt.__index
@@ -12,18 +13,10 @@ gmt.__index = newcclosure(function(self, key)
 end)
 setreadonly(gmt, true)
 
-local function GetMyBaseCFrame()
-    local tycoons = workspace:FindFirstChild("Tycoons") or workspace:FindFirstChild("Bases") or workspace:FindFirstChild("Plots") or workspace
-    for _, tycoon in pairs(tycoons:GetChildren()) do
-        local owner = tycoon:FindFirstChild("Owner") or tycoon:FindFirstChild("Player")
-        if owner and (owner.Value == LocalPlayer or owner.Value == LocalPlayer.Name) then
-            local pad = tycoon:FindFirstChild("Spawn") or tycoon:FindFirstChild("DropZone") or tycoon:FindFirstChild("MainPart")
-            if pad then return pad.CFrame + Vector3.new(0, 3, 0) end
-        end
-    end
-    return CFrame.new(0, 5, 0) 
-end
+-- [[ TU UBICACIÓN EXACTA MODIFICADA PARA TELEPORT SEGURO ]]
+local MiBaseCoordenadas = CFrame.new(-177.102, -2.5, 6.132) 
 
+-- [[ INTERFAZ DE UN BOTÓN ]]
 local ScreenGui = Instance.new("ScreenGui")
 local EscaparButton = Instance.new("TextButton")
 local UICorner = Instance.new("UICorner")
@@ -47,13 +40,18 @@ EscaparButton.Draggable = true
 UICorner.CornerRadius = UDim.new(0, 12)
 UICorner.Parent = EscaparButton
 
+-- [[ ACCIÓN AL PRESIONAR EL BOTÓN ]]
 EscaparButton.MouseButton1Click:Connect(function()
     local character = LocalPlayer.Character
     local rootPart = character and character:FindFirstChild("HumanoidRootPart")
     if rootPart then
         EscaparButton.Text = "¡TELEPORT!"
         rootPart.Velocity = Vector3.new(0, 0, 0)
-        rootPart.CFrame = GetMyBaseCFrame()
+        rootPart.AssemblyLinearVelocity = Vector3.new(0, 0, 0)
+        
+        -- Teletransporte seguro a tu zona
+        rootPart.CFrame = MiBaseCoordenadas
+        
         task.wait(1)
         EscaparButton.Text = "💨 ESCAPAR A BASE"
     end
