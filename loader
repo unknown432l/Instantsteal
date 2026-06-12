@@ -1,5 +1,6 @@
 local Players = game:GetService("Players")
 local LocalPlayer = Players.LocalPlayer
+local TweenService = game:GetService("TweenService")
 
 -- [[ BYPASS ANTI-KICK DELTA ]]
 local gmt = getrawmetatable(game)
@@ -71,7 +72,7 @@ SetPosButton.MouseButton1Click:Connect(function()
     local character = LocalPlayer.Character
     local rootPart = character and character:FindFirstChild("HumanoidRootPart")
     if rootPart then
-        -- Te guarda a ras de suelo exacto para que toque la alfombra de cobro
+        -- Guarda tu posición exacta tocando la alfombra de cobro
         PosicionGuardada = rootPart.CFrame 
         SetPosButton.Text = "✅ ¡BASE CONFIGURADA!"
         SetPosButton.BackgroundColor3 = Color3.fromRGB(0, 180, 90)
@@ -81,7 +82,7 @@ SetPosButton.MouseButton1Click:Connect(function()
     end
 end)
 
--- [[ LÓGICA DE TELETRANSPORTE Y SOLTADO INMEDIATO AL LLEGAR ]]
+-- [[ LÓGICA DE TELETRANSPORTE POR DESLIZAMIENTO SEGURO ]]
 EscaparButton.MouseButton1Click:Connect(function()
     if not PosicionGuardada then
         EscaparButton.Text = "❌ CONFIGURA TU BASE PRIMERO"
@@ -92,60 +93,34 @@ EscaparButton.MouseButton1Click:Connect(function()
 
     local character = LocalPlayer.Character
     local rootPart = character and character:FindFirstChild("HumanoidRootPart")
-    local humanoid = character and character:FindFirstChildOfClass("Humanoid")
     
-    if rootPart and humanoid then
-        EscaparButton.Text = "⚡ ESCAPANDO..."
+    if rootPart and character then
+        EscaparButton.Text = "⚡ VIAJANDO A BASE..."
+        EscaparButton.BackgroundColor3 = Color3.fromRGB(0, 180, 90)
         
-        -- 1. Detiene velocidades físicas antes de moverte
-        rootPart.Velocity = Vector3.new(0, 0, 0)
-        rootPart.AssemblyLinearVelocity = Vector3.new(0, 0, 0)
+        -- 1. Desactivamos la gravedad del personaje un momento para que no se choque con paredes al volar
+        rootPart.Velocity = Vector3.new(0,0,0)
+        rootPart.AssemblyLinearVelocity = Vector3.new(0,0,0)
         
-        -- 2. Teletransporte instantáneo a tu base
-        rootPart.CFrame = PosicionGuardada
-        task.wait(0.02) -- Espera un milisegundo imperceptible para asegurar que pisaste tu alfombra
-
-        -- 3. TRUCO DE SOLTADO FORZADO: Desequipa y avienta el Brainrot al suelo de tu base de inmediato
-        humanoid:UnequipTools() 
-        for _, obj in pairs(character:GetChildren()) do
-            if obj:IsA("Tool") or obj.Name == "Brainrot" or obj:FindFirstChild("Hitbox") then
-                obj.Parent = workspace -- Lo desconecta de tu cuerpo y lo deja tirado en tu alfombra
-            end
-        end
+        -- 2. Creamos un deslizamiento ultra veloz (Tween) hacia tu base
+        -- Esto engaña al servidor haciéndole creer que caminaste rápido, manteniendo el Brainrot amarrado legalmente
+        local distancia = (rootPart.Position - PosicionGuardada.Position).Magnitude
+        local tiempoViaje = distancia / 450 -- Velocidad calculada (ajustada para saltar anticheats de velocidad)
         
-        -- También limpia la mochila por si acaso se guardó solo
-        local backpack = LocalPlayer:FindFirstChild("Backpack")
-        if backpack then
-            for _, tool in pairs(backpack:GetChildren()) do
-                tool.Parent = workspace
-            end
-        end
-
-        -- Corta cualquier cable elástico que intente jalarte hacia atrás
-        for _, obj in pairs(character:GetDescendants()) do
-            if obj:IsA("Constraint") or obj:IsA("BodyMover") or obj:IsA("RopeConstraint") then
-                obj:Destroy()
-            end
-        end
-
-        -- 4. ANCLAJE DE RETENCIÓN DE 7 SEGUNDOS: Te amarra a tu base para que la alfombra procese el cobro sin interrupciones
-        rootPart.Anchored = true
+        local tweenInfo = TweenInfo.new(tiempoViaje, Enum.EasingStyle.Linear)
+        local moverPersonaje = TweenService:Create(rootPart, tweenInfo, {CFrame = PosicionGuardada})
         
-        for i = 1, 140 do
-            rootPart.Velocity = Vector3.new(0, 0, 0)
-            rootPart.AssemblyLinearVelocity = Vector3.new(0, 0, 0)
-            rootPart.CFrame = PosicionGuardada -- Te mantiene firme en el punto exacto
+        moverPersonaje:Play()
+        
+        -- 3. Al llegar a la alfombra, se detiene y activa el cobro natural del juego
+        moverPersonaje.Completed:Connect(function()
+            rootPart.Velocity = Vector3.new(0,0,0)
+            rootPart.AssemblyLinearVelocity = Vector3.new(0,0,0)
             
-            if i % 20 == 0 then
-                local segundosRestantes = 7 - math.floor(i / 20)
-                EscaparButton.Text = "⏳ ASEGURANDO... (" .. segundosRestantes .. "s)"
-            end
-            
-            task.wait(0.05)
-        end
-        
-        -- 5. Te libera una vez asegurado el dinero de la entrega
-        rootPart.Anchored = false
-        EscaparButton.Text = "💨 ESCAPAR CON BOTÍN"
+            -- Te deja libre en tu base
+            EscaparButton.Text = "💨 ESCAPAR CON BOTÍN"
+            EscaparButton.BackgroundColor3 = Color3.fromRGB(255, 0, 100)
+            print("¡Llegada exitosa! El juego debería procesar el 'You Stole' ahora.")
+        end)
     end
 end)
