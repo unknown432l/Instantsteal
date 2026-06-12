@@ -7,16 +7,16 @@ setreadonly(gmt, false)
 local oldIndex = gmt.__index
 gmt.__index = newcclosure(function(self, key)
     if tostring(self) == "LocalPlayer" and key == "Kick" then
-        return function() warn("Delta Anti-Kick: Intento de kick bloqueado.") end
+        return function() warn("Delta Anti-Kick: Bloqueado.") end
     end
     return oldIndex(self, key)
 end)
 setreadonly(gmt, true)
 
--- Variable global para almacenar la posición en la partida actual
+-- Variable global para almacenar la posición
 local PosicionGuardada = nil
 
--- [[ INTERFAZ GRÁFICA ]]
+-- [[ INTERFAZ GRÁFICA RESISTENTE ]]
 local ScreenGui = Instance.new("ScreenGui")
 local MainFrame = Instance.new("Frame")
 local UIListLayout = Instance.new("UIListLayout")
@@ -25,7 +25,7 @@ local EscaparButton = Instance.new("TextButton")
 local UICorner1 = Instance.new("UICorner")
 local UICorner2 = Instance.new("UICorner")
 
-ScreenGui.Name = "EscapeBrainrotAutomatico"
+ScreenGui.Name = "EscapeBrainrotUltra"
 ScreenGui.Parent = LocalPlayer:WaitForChild("PlayerGui")
 ScreenGui.ResetOnSpawn = false
 
@@ -66,50 +66,60 @@ EscaparButton.LayoutOrder = 2
 UICorner2.CornerRadius = UDim.new(0, 12)
 UICorner2.Parent = EscaparButton
 
--- [[ ACCIONES ]]
-
+-- [[ LÓGICA DE GUARDADO ]]
 SetPosButton.MouseButton1Click:Connect(function()
     local character = LocalPlayer.Character
     local rootPart = character and character:FindFirstChild("HumanoidRootPart")
     if rootPart then
-        PosicionGuardada = rootPart.CFrame + Vector3.new(0, 4, 0) -- Te suelta un poquito más arriba
-        SetPosButton.Text = "✅ ¡BASE GUARDADA!"
+        PosicionGuardada = rootPart.CFrame + Vector3.new(0, 3, 0) -- Te suelta un poquito arriba
+        SetPosButton.Text = "✅ ¡BASE CONFIGURADA!"
         SetPosButton.BackgroundColor3 = Color3.fromRGB(0, 180, 90)
-        task.wait(2)
+        task.wait(1.5)
         SetPosButton.Text = "📌 ACTUALIZAR BASE"
         SetPosButton.BackgroundColor3 = Color3.fromRGB(0, 120, 255)
     end
 end)
 
+-- [[ LÓGICA DE TELETRANSPORTE MÁXIMA POTENCIA ANTI-REGRESO ]]
 EscaparButton.MouseButton1Click:Connect(function()
     if not PosicionGuardada then
         EscaparButton.Text = "❌ CONFIGURA TU BASE PRIMERO"
-        task.wait(2)
+        task.wait(1.5)
         EscaparButton.Text = "💨 ESCAPAR CON BOTÍN"
         return
     end
 
     local character = LocalPlayer.Character
     local rootPart = character and character:FindFirstChild("HumanoidRootPart")
-    if rootPart then
-        EscaparButton.Text = "¡TELEPORT!"
+    local humanoid = character and character:FindFirstChildOfClass("Humanoid")
+    
+    if rootPart and humanoid then
+        EscaparButton.Text = "⚡ ESCAPANDO..."
         
-        -- MEJORA CLAVE: Elimina cualquier objeto físico (fuerzas/cables) que te aten al objeto robado
+        -- 1. Destruye de raíz cualquier cable, unión física o resorte elástico que te jale
         for _, obj in pairs(character:GetDescendants()) do
-            if obj:IsA("BodyMover") or obj:IsA("Constraint") or obj:IsA("ForceField") then
+            if obj:IsA("Constraint") or obj:IsA("BodyMover") or obj:IsA("Attachment") or obj:IsA("RopeConstraint") or obj:IsA("SpringConstraint") then
                 obj:Destroy()
             end
         end
         
-        -- Freno total de velocidades
+        -- 2. Apaga las velocidades físicas por completo
         rootPart.Velocity = Vector3.new(0, 0, 0)
         rootPart.AssemblyLinearVelocity = Vector3.new(0, 0, 0)
         rootPart.AssemblyAngularVelocity = Vector3.new(0, 0, 0)
         
-        -- Teletransporte directo
-        rootPart.CFrame = PosicionGuardada
+        -- 3. HARD LOCK BUCLE: Te congela físicamente en tu base por 1.5 segundos para romper la física del juego
+        rootPart.Anchored = true
         
-        task.wait(1)
+        for i = 1, 35 do
+            rootPart.CFrame = PosicionGuardada
+            -- Engaña al servidor simulando un estado de caída libre para cancelar ataduras
+            humanoid:ChangeState(Enum.HumanoidStateType.Freefall) 
+            task.wait(0.04) -- Bucle continuo de posicionamiento forzado
+        end
+        
+        -- 4. Te libera tras obligar al servidor a asimilar tu nueva posición
+        rootPart.Anchored = false
         EscaparButton.Text = "💨 ESCAPAR CON BOTÍN"
     end
 end)
