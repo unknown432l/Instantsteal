@@ -1,8 +1,7 @@
 local Players = game:GetService("Players")
 local LocalPlayer = Players.LocalPlayer
-local TweenService = game:GetService("TweenService")
 
--- [[ BYPASS ANTI-KICK DELTA ]]
+-- [[ BYPASS ANTI-KICK DELTA AVANZADO ]]
 local gmt = getrawmetatable(game)
 setreadonly(gmt, false)
 local oldIndex = gmt.__index
@@ -14,10 +13,11 @@ gmt.__index = newcclosure(function(self, key)
 end)
 setreadonly(gmt, true)
 
--- Variable global para almacenar la posición
+-- Variables globales
+local MiZonaDeEntrega = nil
 local PosicionGuardada = nil
 
--- [[ INTERFAZ GRÁFICA RESISTENTE ]]
+-- [[ INTERFAZ GRÁFICA NEGRO MATE CON AZUL NEÓN ]]
 local ScreenGui = Instance.new("ScreenGui")
 local MainFrame = Instance.new("Frame")
 local UIListLayout = Instance.new("UIListLayout")
@@ -25,102 +25,148 @@ local SetPosButton = Instance.new("TextButton")
 local EscaparButton = Instance.new("TextButton")
 local UICorner1 = Instance.new("UICorner")
 local UICorner2 = Instance.new("UICorner")
+local UIGradient1 = Instance.new("UIGradient")
+local UIGradient2 = Instance.new("UIGradient")
+local UIBorder1 = Instance.new("UIStroke")
+local UIBorder2 = Instance.new("UIStroke")
 
-ScreenGui.Name = "EscapeBrainrotUltra"
+ScreenGui.Name = "NeonBlueBrainrotEscape"
 ScreenGui.Parent = LocalPlayer:WaitForChild("PlayerGui")
 ScreenGui.ResetOnSpawn = false
 
 MainFrame.Parent = ScreenGui
-MainFrame.Size = UDim2.new(0, 200, 0, 115)
-MainFrame.Position = UDim2.new(0.5, -100, 0.15, 0)
+MainFrame.Size = UDim2.new(0, 210, 0, 120)
+MainFrame.Position = UDim2.new(0.5, -105, 0.15, 0)
 MainFrame.BackgroundTransparency = 1
 MainFrame.Active = true
-MainFrame.Draggable = true
+MainFrame.Draggable = true -- Se puede arrastrar en celulares
 
 UIListLayout.Parent = MainFrame
 UIListLayout.SortOrder = Enum.SortOrder.LayoutOrder
 UIListLayout.Padding = UDim.new(0, 10)
 
+-- BOTÓN 1: Guardar la posición (Diseño Negro y Azul Neón)
 SetPosButton.Name = "SetPosButton"
 SetPosButton.Parent = MainFrame
 SetPosButton.Size = UDim2.new(1, 0, 0, 50)
-SetPosButton.BackgroundColor3 = Color3.fromRGB(0, 120, 255)
+SetPosButton.BackgroundColor3 = Color3.fromRGB(15, 15, 18) -- Negro mate profundo
 SetPosButton.TextColor3 = Color3.fromRGB(255, 255, 255)
-SetPosButton.TextSize = 16
+SetPosButton.TextSize = 14
 SetPosButton.Font = Enum.Font.GothamBold
 SetPosButton.Text = "📌 GUARDAR MI BASE"
 SetPosButton.LayoutOrder = 1
 
-UICorner1.CornerRadius = UDim.new(0, 12)
+UICorner1.CornerRadius = UDim.new(0, 10)
 UICorner1.Parent = SetPosButton
 
+UIGradient1.Color = ColorSequence.new{
+    ColorSequenceKeypoint.new(0, Color3.fromRGB(0, 40, 80)),   -- Azul Cyber oscuro
+    ColorSequenceKeypoint.new(1, Color3.fromRGB(10, 10, 12))   -- Negro puro
+}
+UIGradient1.Parent = SetPosButton
+
+UIBorder1.Color = Color3.fromRGB(0, 160, 255) -- Borde Azul Neón Eléctrico brillante
+UIBorder1.Thickness = 2
+UIBorder1.Parent = SetPosButton
+
+-- BOTÓN 2: Escapar con el botín (Diseño Combinado)
 EscaparButton.Name = "EscapeButton"
 EscaparButton.Parent = MainFrame
 EscaparButton.Size = UDim2.new(1, 0, 0, 50)
-EscaparButton.BackgroundColor3 = Color3.fromRGB(255, 0, 100)
+EscaparButton.BackgroundColor3 = Color3.fromRGB(15, 15, 18)
 EscaparButton.TextColor3 = Color3.fromRGB(255, 255, 255)
-EscaparButton.TextSize = 16
+EscaparButton.TextSize = 14
 EscaparButton.Font = Enum.Font.GothamBold
-EscaparButton.Text = "💨 ESCAPAR CON BOTÍN"
+EscaparButton.Text = "⚡ ESCAPAR CON BOTÍN"
 EscaparButton.LayoutOrder = 2
 
-UICorner2.CornerRadius = UDim.new(0, 12)
+UICorner2.CornerRadius = UDim.new(0, 10)
 UICorner2.Parent = EscaparButton
 
--- [[ LÓGICA DE GUARDADO ]]
+UIGradient2.Color = ColorSequence.new{
+    ColorSequenceKeypoint.new(0, Color3.fromRGB(0, 90, 220)),  -- Azul Neón Intenso
+    ColorSequenceKeypoint.new(1, Color3.fromRGB(5, 10, 25))    -- Fondo oscuro
+}
+UIGradient2.Parent = EscaparButton
+
+UIBorder2.Color = Color3.fromRGB(0, 210, 255) -- Borde Ultrabrillante Cian/Azul
+UIBorder2.Thickness = 2
+UIBorder2.Parent = EscaparButton
+
+-- [[ LÓGICA DE DETECCIÓN Y GUARDADO ]]
 SetPosButton.MouseButton1Click:Connect(function()
     local character = LocalPlayer.Character
     local rootPart = character and character:FindFirstChild("HumanoidRootPart")
     if rootPart then
-        -- Guarda tu posición exacta tocando la alfombra de cobro
-        PosicionGuardada = rootPart.CFrame 
-        SetPosButton.Text = "✅ ¡BASE CONFIGURADA!"
-        SetPosButton.BackgroundColor3 = Color3.fromRGB(0, 180, 90)
+        PosicionGuardada = rootPart.CFrame
+        
+        local raycastParams = RaycastParams.new()
+        local ray = workspace:Raycast(rootPart.Position, Vector3.new(0, -10, 0), raycastParams)
+        if ray and ray.Instance then
+            MiZonaDeEntrega = ray.Instance
+        end
+        
+        SetPosButton.Text = "✅ ¡BASE GUARDADA!"
+        UIBorder1.Color = Color3.fromRGB(0, 255, 120) -- Borde Verde Neón temporal de éxito
         task.wait(1.5)
         SetPosButton.Text = "📌 ACTUALIZAR BASE"
-        SetPosButton.BackgroundColor3 = Color3.fromRGB(0, 120, 255)
+        UIBorder1.Color = Color3.fromRGB(0, 160, 255) -- Regresa al Azul Neón
     end
 end)
 
--- [[ LÓGICA DE TELETRANSPORTE POR DESLIZAMIENTO SEGURO ]]
+-- [[ MOTOR FUERTE ANTI-JALÓN (ESTILO VECTOR NULLIFY + INYECCIÓN) ]]
 EscaparButton.MouseButton1Click:Connect(function()
     if not PosicionGuardada then
         EscaparButton.Text = "❌ CONFIGURA TU BASE PRIMERO"
         task.wait(1.5)
-        EscaparButton.Text = "💨 ESCAPAR CON BOTÍN"
+        EscaparButton.Text = "⚡ ESCAPAR CON BOTÍN"
         return
     end
 
     local character = LocalPlayer.Character
     local rootPart = character and character:FindFirstChild("HumanoidRootPart")
+    local humanoid = character and character:FindFirstChildOfClass("Humanoid")
     
-    if rootPart and character then
-        EscaparButton.Text = "⚡ VIAJANDO A BASE..."
-        EscaparButton.BackgroundColor3 = Color3.fromRGB(0, 180, 90)
+    if rootPart and character and humanoid then
+        EscaparButton.Text = "📡 CORRIENDO TRUCO..."
         
-        -- 1. Desactivamos la gravedad del personaje un momento para que no se choque con paredes al volar
+        -- 1. DETECCIÓN Y DESANCLAJE DE RESORTES: Destruye los cables del juego de inmediato
+        for _, obj in pairs(character:GetDescendants()) do
+            if obj:IsA("Constraint") or obj:IsA("BodyMover") or obj:IsA("RopeConstraint") or obj:IsA("SpringConstraint") then
+                obj:Destroy()
+            end
+        end
+        
+        -- 2. BUSCAR PARTE FÍSICA DEL BOTÍN
+        local brainrotPart = character:FindFirstChild("Brainrot") or character:FindFirstChildOfClass("Tool")
+        if brainrotPart and brainrotPart:FindFirstChild("Handle") then
+            brainrotPart = brainrotPart.Handle
+        elseif character:FindFirstChild("BackpackItem") then
+            brainrotPart = character.BackpackItem
+        end
+        
+        -- 3. INYECCIÓN FÍSICA DE COLISIÓN (Activa el cartel de 'You Stole')
+        if MiZonaDeEntrega and brainrotPart then
+            firetouchtransmitter(MiZonaDeEntrega, brainrotPart, 0)
+            task.wait(0.01)
+            firetouchtransmitter(MiZonaDeEntrega, brainrotPart, 1)
+        end
+        
+        -- 4. TELETRANSPORTE HARD CFRAME (Freno absoluto de vectores de velocidad)
         rootPart.Velocity = Vector3.new(0,0,0)
         rootPart.AssemblyLinearVelocity = Vector3.new(0,0,0)
+        rootPart.AssemblyAngularVelocity = Vector3.new(0,0,0)
+        rootPart.CFrame = PosicionGuardada
         
-        -- 2. Creamos un deslizamiento ultra veloz (Tween) hacia tu base
-        -- Esto engaña al servidor haciéndole creer que caminaste rápido, manteniendo el Brainrot amarrado legalmente
-        local distancia = (rootPart.Position - PosicionGuardada.Position).Magnitude
-        local tiempoViaje = distancia / 450 -- Velocidad calculada (ajustada para saltar anticheats de velocidad)
+        -- 5. BUCLE DE REDUNDANCIA: Congela tu red por microsegundos para evitar que el server te jale
+        rootPart.Anchored = true
+        for i = 1, 12 do
+            rootPart.CFrame = PosicionGuardada
+            humanoid:ChangeState(Enum.HumanoidStateType.Freefall) -- Resetea la animación para engañar las físicas
+            task.wait(0.02)
+        end
+        rootPart.Anchored = false
         
-        local tweenInfo = TweenInfo.new(tiempoViaje, Enum.EasingStyle.Linear)
-        local moverPersonaje = TweenService:Create(rootPart, tweenInfo, {CFrame = PosicionGuardada})
-        
-        moverPersonaje:Play()
-        
-        -- 3. Al llegar a la alfombra, se detiene y activa el cobro natural del juego
-        moverPersonaje.Completed:Connect(function()
-            rootPart.Velocity = Vector3.new(0,0,0)
-            rootPart.AssemblyLinearVelocity = Vector3.new(0,0,0)
-            
-            -- Te deja libre en tu base
-            EscaparButton.Text = "💨 ESCAPAR CON BOTÍN"
-            EscaparButton.BackgroundColor3 = Color3.fromRGB(255, 0, 100)
-            print("¡Llegada exitosa! El juego debería procesar el 'You Stole' ahora.")
-        end)
+        EscaparButton.Text = "⚡ ESCAPAR CON BOTÍN"
     end
 end)
