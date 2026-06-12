@@ -13,46 +13,100 @@ gmt.__index = newcclosure(function(self, key)
 end)
 setreadonly(gmt, true)
 
--- [[ TU UBICACIÓN EXACTA MODIFICADA PARA TELEPORT SEGURO ]]
-local MiBaseCoordenadas = CFrame.new(-177.102, -2.5, 6.132) 
+-- Variable global para almacenar la posición en la partida actual
+local PosicionGuardada = nil
 
--- [[ INTERFAZ DE UN BOTÓN ]]
+-- [[ INTERFAZ GRÁFICA ]]
 local ScreenGui = Instance.new("ScreenGui")
+local MainFrame = Instance.new("Frame")
+local UIListLayout = Instance.new("UIListLayout")
+local SetPosButton = Instance.new("TextButton")
 local EscaparButton = Instance.new("TextButton")
-local UICorner = Instance.new("UICorner")
+local UICorner1 = Instance.new("UICorner")
+local UICorner2 = Instance.new("UICorner")
 
-ScreenGui.Name = "EscapeBrainrotMenu"
+ScreenGui.Name = "EscapeBrainrotAutomatico"
 ScreenGui.Parent = LocalPlayer:WaitForChild("PlayerGui")
 ScreenGui.ResetOnSpawn = false
 
+-- Contenedor invisible para mover ambos botones juntos
+MainFrame.Parent = ScreenGui
+MainFrame.Size = UDim2.new(0, 200, 0, 115)
+MainFrame.Position = UDim2.new(0.5, -100, 0.15, 0)
+MainFrame.BackgroundTransparency = 1
+MainFrame.Active = true
+MainFrame.Draggable = true -- Puedes arrastrar todo el menú junto
+
+UIListLayout.Parent = MainFrame
+UIListLayout.SortOrder = Enum.SortOrder.LayoutOrder
+UIListLayout.Padding = UDim.new(0, 10)
+
+-- BOTÓN 1: Guardar la posición actual
+SetPosButton.Name = "SetPosButton"
+SetPosButton.Parent = MainFrame
+SetPosButton.Size = UDim2.new(1, 0, 0, 50)
+SetPosButton.BackgroundColor3 = Color3.fromRGB(0, 120, 255) -- Azul
+SetPosButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+SetPosButton.TextSize = 16
+SetPosButton.Font = Enum.Font.GothamBold
+SetPosButton.Text = "📌 GUARDAR MI BASE"
+SetPosButton.LayoutOrder = 1
+
+UICorner1.CornerRadius = UDim.new(0, 12)
+UICorner1.Parent = SetPosButton
+
+-- BOTÓN 2: Teletransporte de escape
 EscaparButton.Name = "EscapeButton"
-EscaparButton.Parent = ScreenGui
-EscaparButton.Size = UDim2.new(0, 180, 0, 60)
-EscaparButton.Position = UDim2.new(0.5, -90, 0.15, 0)
-EscaparButton.BackgroundColor3 = Color3.fromRGB(255, 0, 100)
+EscaparButton.Parent = MainFrame
+EscaparButton.Size = UDim2.new(1, 0, 0, 50)
+EscaparButton.BackgroundColor3 = Color3.fromRGB(255, 0, 100) -- Rosado
 EscaparButton.TextColor3 = Color3.fromRGB(255, 255, 255)
-EscaparButton.TextSize = 18
+EscaparButton.TextSize = 16
 EscaparButton.Font = Enum.Font.GothamBold
-EscaparButton.Text = "💨 ESCAPAR A BASE"
-EscaparButton.Active = true
-EscaparButton.Draggable = true
+EscaparButton.Text = "💨 ESCAPAR CON BOTÍN"
+EscaparButton.LayoutOrder = 2
 
-UICorner.CornerRadius = UDim.new(0, 12)
-UICorner.Parent = EscaparButton
+UICorner2.CornerRadius = UDim.new(0, 12)
+UICorner2.Parent = EscaparButton
 
--- [[ ACCIÓN AL PRESIONAR EL BOTÓN ]]
+-- [[ ACCIONES ]]
+
+-- Lógica para guardar la base al inicio
+SetPosButton.MouseButton1Click:Connect(function()
+    local character = LocalPlayer.Character
+    local rootPart = character and character:FindFirstChild("HumanoidRootPart")
+    if rootPart then
+        -- Guarda la posición actual y le suma un poquito de altura de seguridad
+        PosicionGuardada = rootPart.CFrame + Vector3.new(0, 3, 0)
+        SetPosButton.Text = "✅ ¡BASE GUARDADA!"
+        SetPosButton.BackgroundColor3 = Color3.fromRGB(0, 180, 90) -- Verde
+        task.wait(2)
+        SetPosButton.Text = "📌 ACTUALIZAR BASE"
+        SetPosButton.BackgroundColor3 = Color3.fromRGB(0, 120, 255)
+    end
+end)
+
+-- Lógica para teletransportarse
 EscaparButton.MouseButton1Click:Connect(function()
+    if not PosicionGuardada then
+        EscaparButton.Text = "❌ CONFIGURA TU BASE PRIMERO"
+        task.wait(2)
+        EscaparButton.Text = "💨 ESCAPAR CON BOTÍN"
+        return
+    end
+
     local character = LocalPlayer.Character
     local rootPart = character and character:FindFirstChild("HumanoidRootPart")
     if rootPart then
         EscaparButton.Text = "¡TELEPORT!"
+        
         rootPart.Velocity = Vector3.new(0, 0, 0)
         rootPart.AssemblyLinearVelocity = Vector3.new(0, 0, 0)
         
-        -- Teletransporte seguro a tu zona
-        rootPart.CFrame = MiBaseCoordenadas
+        -- Te lleva a la ubicación exacta que guardaste con el botón azul
+        rootPart.CFrame = PosicionGuardada
         
         task.wait(1)
-        EscaparButton.Text = "💨 ESCAPAR A BASE"
+        EscaparButton.Text = "💨 ESCAPAR CON BOTÍN"
     end
 end)
