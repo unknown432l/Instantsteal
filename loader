@@ -71,7 +71,8 @@ SetPosButton.MouseButton1Click:Connect(function()
     local character = LocalPlayer.Character
     local rootPart = character and character:FindFirstChild("HumanoidRootPart")
     if rootPart then
-        PosicionGuardada = rootPart.CFrame + Vector3.new(0, 3, 0) -- Te suelta un poquito arriba
+        -- Te guarda a ras de suelo exacto para que toque la alfombra de cobro
+        PosicionGuardada = rootPart.CFrame 
         SetPosButton.Text = "✅ ¡BASE CONFIGURADA!"
         SetPosButton.BackgroundColor3 = Color3.fromRGB(0, 180, 90)
         task.wait(1.5)
@@ -80,7 +81,7 @@ SetPosButton.MouseButton1Click:Connect(function()
     end
 end)
 
--- [[ LÓGICA DE TELETRANSPORTE MÁXIMA POTENCIA ANTI-REGRESO ]]
+-- [[ LÓGICA DE TELETRANSPORTE Y SOLTADO INMEDIATO AL LLEGAR ]]
 EscaparButton.MouseButton1Click:Connect(function()
     if not PosicionGuardada then
         EscaparButton.Text = "❌ CONFIGURA TU BASE PRIMERO"
@@ -96,29 +97,54 @@ EscaparButton.MouseButton1Click:Connect(function()
     if rootPart and humanoid then
         EscaparButton.Text = "⚡ ESCAPANDO..."
         
-        -- 1. Destruye de raíz cualquier cable, unión física o resorte elástico que te jale
-        for _, obj in pairs(character:GetDescendants()) do
-            if obj:IsA("Constraint") or obj:IsA("BodyMover") or obj:IsA("Attachment") or obj:IsA("RopeConstraint") or obj:IsA("SpringConstraint") then
-                obj:Destroy()
+        -- 1. Detiene velocidades físicas antes de moverte
+        rootPart.Velocity = Vector3.new(0, 0, 0)
+        rootPart.AssemblyLinearVelocity = Vector3.new(0, 0, 0)
+        
+        -- 2. Teletransporte instantáneo a tu base
+        rootPart.CFrame = PosicionGuardada
+        task.wait(0.02) -- Espera un milisegundo imperceptible para asegurar que pisaste tu alfombra
+
+        -- 3. TRUCO DE SOLTADO FORZADO: Desequipa y avienta el Brainrot al suelo de tu base de inmediato
+        humanoid:UnequipTools() 
+        for _, obj in pairs(character:GetChildren()) do
+            if obj:IsA("Tool") or obj.Name == "Brainrot" or obj:FindFirstChild("Hitbox") then
+                obj.Parent = workspace -- Lo desconecta de tu cuerpo y lo deja tirado en tu alfombra
             end
         end
         
-        -- 2. Apaga las velocidades físicas por completo
-        rootPart.Velocity = Vector3.new(0, 0, 0)
-        rootPart.AssemblyLinearVelocity = Vector3.new(0, 0, 0)
-        rootPart.AssemblyAngularVelocity = Vector3.new(0, 0, 0)
-        
-        -- 3. HARD LOCK BUCLE: Te congela físicamente en tu base por 1.5 segundos para romper la física del juego
+        -- También limpia la mochila por si acaso se guardó solo
+        local backpack = LocalPlayer:FindFirstChild("Backpack")
+        if backpack then
+            for _, tool in pairs(backpack:GetChildren()) do
+                tool.Parent = workspace
+            end
+        end
+
+        -- Corta cualquier cable elástico que intente jalarte hacia atrás
+        for _, obj in pairs(character:GetDescendants()) do
+            if obj:IsA("Constraint") or obj:IsA("BodyMover") or obj:IsA("RopeConstraint") then
+                obj:Destroy()
+            end
+        end
+
+        -- 4. ANCLAJE DE RETENCIÓN DE 7 SEGUNDOS: Te amarra a tu base para que la alfombra procese el cobro sin interrupciones
         rootPart.Anchored = true
         
-        for i = 1, 35 do
-            rootPart.CFrame = PosicionGuardada
-            -- Engaña al servidor simulando un estado de caída libre para cancelar ataduras
-            humanoid:ChangeState(Enum.HumanoidStateType.Freefall) 
-            task.wait(0.04) -- Bucle continuo de posicionamiento forzado
+        for i = 1, 140 do
+            rootPart.Velocity = Vector3.new(0, 0, 0)
+            rootPart.AssemblyLinearVelocity = Vector3.new(0, 0, 0)
+            rootPart.CFrame = PosicionGuardada -- Te mantiene firme en el punto exacto
+            
+            if i % 20 == 0 then
+                local segundosRestantes = 7 - math.floor(i / 20)
+                EscaparButton.Text = "⏳ ASEGURANDO... (" .. segundosRestantes .. "s)"
+            end
+            
+            task.wait(0.05)
         end
         
-        -- 4. Te libera tras obligar al servidor a asimilar tu nueva posición
+        -- 5. Te libera una vez asegurado el dinero de la entrega
         rootPart.Anchored = false
         EscaparButton.Text = "💨 ESCAPAR CON BOTÍN"
     end
