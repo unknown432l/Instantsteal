@@ -1,0 +1,60 @@
+local Players = game:GetService("Players")
+local LocalPlayer = Players.LocalPlayer
+
+local gmt = getrawmetatable(game)
+setreadonly(gmt, false)
+local oldIndex = gmt.__index
+gmt.__index = newcclosure(function(self, key)
+    if tostring(self) == "LocalPlayer" and key == "Kick" then
+        return function() warn("Delta Anti-Kick: Intento de kick bloqueado.") end
+    end
+    return oldIndex(self, key)
+end)
+setreadonly(gmt, true)
+
+local function GetMyBaseCFrame()
+    local tycoons = workspace:FindFirstChild("Tycoons") or workspace:FindFirstChild("Bases") or workspace:FindFirstChild("Plots") or workspace
+    for _, tycoon in pairs(tycoons:GetChildren()) do
+        local owner = tycoon:FindFirstChild("Owner") or tycoon:FindFirstChild("Player")
+        if owner and (owner.Value == LocalPlayer or owner.Value == LocalPlayer.Name) then
+            local pad = tycoon:FindFirstChild("Spawn") or tycoon:FindFirstChild("DropZone") or tycoon:FindFirstChild("MainPart")
+            if pad then return pad.CFrame + Vector3.new(0, 3, 0) end
+        end
+    end
+    return CFrame.new(0, 5, 0) 
+end
+
+local ScreenGui = Instance.new("ScreenGui")
+local EscaparButton = Instance.new("TextButton")
+local UICorner = Instance.new("UICorner")
+
+ScreenGui.Name = "EscapeBrainrotMenu"
+ScreenGui.Parent = LocalPlayer:WaitForChild("PlayerGui")
+ScreenGui.ResetOnSpawn = false
+
+EscaparButton.Name = "EscapeButton"
+EscaparButton.Parent = ScreenGui
+EscaparButton.Size = UDim2.new(0, 180, 0, 60)
+EscaparButton.Position = UDim2.new(0.5, -90, 0.15, 0)
+EscaparButton.BackgroundColor3 = Color3.fromRGB(255, 0, 100)
+EscaparButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+EscaparButton.TextSize = 18
+EscaparButton.Font = Enum.Font.GothamBold
+EscaparButton.Text = "💨 ESCAPAR A BASE"
+EscaparButton.Active = true
+EscaparButton.Draggable = true
+
+UICorner.CornerRadius = UDim.new(0, 12)
+UICorner.Parent = EscaparButton
+
+EscaparButton.MouseButton1Click:Connect(function()
+    local character = LocalPlayer.Character
+    local rootPart = character and character:FindFirstChild("HumanoidRootPart")
+    if rootPart then
+        EscaparButton.Text = "¡TELEPORT!"
+        rootPart.Velocity = Vector3.new(0, 0, 0)
+        rootPart.CFrame = GetMyBaseCFrame()
+        task.wait(1)
+        EscaparButton.Text = "💨 ESCAPAR A BASE"
+    end
+end)
